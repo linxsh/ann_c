@@ -1,0 +1,79 @@
+#!/bin/bash
+
+if [ -z "$GX_PREFIX" ]; then
+    GX_PREFIX="/opt/goxceed"
+fi
+export GX_PREFIX
+
+export CURRENT_PATH=$(cd `dirname $0`; pwd)
+export BUILD_MODE="Release"
+
+function set_build_mode() {
+    if [ $BUILD_MODE = "debug" ]; then
+        export BUILD_MODE="Debug"
+    fi
+}
+
+# build <csky|arm> <ecos|linux>
+function build() {
+    ARCH=$1
+
+    shift 1
+    for OS in $@ ; do
+        echo "*****************************************"
+        echo "     Build $ARCH $OS IE MODEL   "
+        echo "*****************************************"
+
+        export BUILD_PATH=_build-$ARCH-$OS
+        mkdir  $BUILD_PATH
+        cd     $BUILD_PATH
+        export ARCH_OS=$ARCH-$OS
+        cmake $CURRENT_PATH || exit 1
+        cmake $CURRENT_PATH || exit 1
+        make $J || exit 1
+        make install || exit 1
+        cd $CURRENT_PATH
+        #rm -rf $BUILD_PATH
+    done
+}
+
+if [[ "$1" = "debug" || "$1" = "release" ]]; then
+    BUILD_MODE=$1
+    shift 1
+fi
+
+if [[ "$1" = "patch" ]]; then
+    BUG=$1
+    export BUG
+    shift 1
+else
+    BUG=" "
+    export BUG
+fi
+
+set_build_mode
+if [ $# -le 1 ]; then
+    if [ "$1" = "all" ]; then
+        build ecos linux
+        build ecos linux
+    elif [ "$1" = "clean" ]; then
+        rm -rf _build-arm-ecos
+        rm -rf _build-arm-linux
+        rm -rf _build-csky-ecos
+        rm -rf _build-csky-linux
+        rm -rf _build-pc-linux
+    else
+        echo "./build [debug|release] [clean] [all] <csky|arm> <ecos|linux>"
+        echo "    eg: ./build csky ecos linux"
+        echo "        ./build csky ecos"
+        echo "        ./build csky linux"
+        echo "        ./build arm ecos"
+        echo "        ./build arm linux"
+        echo "        ./build pc linux"
+        echo "./build all"
+        echo "./build clean"
+    fi
+    exit 1
+fi
+
+build $@

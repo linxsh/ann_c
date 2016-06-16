@@ -1,0 +1,15 @@
+INCLUDE(../cmake/toolchain.cmake)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+IF (ARCH_OS STREQUAL pc-linux)
+	SET(GXLIB iecmodel pthread)
+ENDIF()
+
+INCLUDE_DIRECTORIES (include        )
+AUX_SOURCE_DIRECTORY(.           SRC)
+
+ADD_EXECUTABLE(ie_c ${SRC})
+
+TARGET_LINK_LIBRARIES(ie_c ${GXLIB})
+
